@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 from github import Github
 from agent.agent import Agent, AgentList, InitializeAgentList
 from gitmodule.repo_info import repo_info, repo_info_list
+from prompt.make_prompt import make_prompt
 import os 
 
 class GitEnvironment:
@@ -52,15 +53,19 @@ class GitAgent:
             except Exception as e:
                 print(f"Error fetching issues for repo {repo.name}: {e}")
         return issues
-    def run_assignee_issue(self):
+    
+    def run_assignee_issue(self) -> list:
         agentList = InitializeAgentList()
+        promptList = []
         for agent in agentList:
             issue_list = self.get_issue_list(agent.name)
             if len(issue_list) > 0:
                 print(f"Found {len(issue_list)} issues for assignee @{agent.name}")
             for issue in issue_list:
                 print(f"Issue Title: {issue.title}, Repo: {issue.repository.full_name}")
-                #run issue 
+                prompt = make_prompt(agent.name, issue.number, issue.title, issue.body)
+                promptList.append(prompt)
+        return promptList
                 
     
 class GitAgentFactory:
