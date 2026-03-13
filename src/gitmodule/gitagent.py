@@ -1,5 +1,7 @@
 from dotenv import load_dotenv
 from github import Github
+from agent.agent import Agent, AgentList, InitializeAgentList
+from gitmodule.repo_info import repo_info, repo_info_list
 import os 
 
 class GitEnvironment:
@@ -11,6 +13,8 @@ class GitEnvironment:
         return self.git_token
     def get_git_repo_list(self) -> list:
         return self.git_repo_list
+    def get_git_repo_origin_str(self) -> str:
+        return os.getenv("GIT_REPO_LIST")
     
 class GitEnvironmentFactory:
     @staticmethod
@@ -28,20 +32,16 @@ class GitAgent:
         return Github(self.get_git_token())
     def get_github_repos(self):
         github = self.get_github_instance()
-        repos = []
-        for repo_name in self.get_git_repo_list():
-            try:
-                repo = github.get_repo(repo_name)
-                repos.append(repo)
-            except Exception as e:
-                print(f"Error fetching repo {repo_name}: {e}")
+        repos = repo_info_list(self.git_env.get_git_repo_origin_str())
+        for repo in repos:
+            repo.set_remote_info(github)
         return repos
     def get_issue_list(self, assignee: str = None):
         repos = self.get_github_repos()
         issues = []
         for repo in repos:
             try:
-                repo_issues = repo.get_issues(state="open")
+                repo_issues = repo.remote_repo_info.get_issues(state="open")
                 for repo_issue in repo_issues:
                     if assignee:
                         body = repo_issue.body or ""  # None 방지
@@ -52,6 +52,16 @@ class GitAgent:
             except Exception as e:
                 print(f"Error fetching issues for repo {repo.name}: {e}")
         return issues
+    def run_assignee_issue(self):
+        agentList = InitializeAgentList()
+        for agent in agentList:
+            issue_list = self.get_issue_list(agent.name)
+            if len(issue_list) > 0:
+                print(f"Found {len(issue_list)} issues for assignee @{agent.name}")
+            for issue in issue_list:
+                print(f"Issue Title: {issue.title}, Repo: {issue.repository.full_name}")
+                #run issue 
+                
     
 class GitAgentFactory:
     @staticmethod

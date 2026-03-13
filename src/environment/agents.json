@@ -1,0 +1,20 @@
+[
+    {
+        "name": "claude",
+        "command": "claude",
+        "path": "witch claude",
+        "description": "claude information"
+    },
+    {
+        "name": "codex",
+        "command": "codex",
+        "path": "witch codex",
+        "description": "codex information"
+    },
+    {
+        "name": "gemini",
+        "command": "gemini",
+        "path": "witch gemini",
+        "description": "gemini information"
+    }
+]
