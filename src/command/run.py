@@ -5,10 +5,13 @@ from dotenv import load_dotenv
 load_dotenv()
 async def run_agent(agent: str, prompt: str, cwd: str):
     options = "--dangerously-skip-permissions"
+    if 'gemini' in agent:
+        options = "--yolo"
     command = f"{agent} -p \"{prompt}\" {options}"
     if 'codex' in agent:
         options = "--full-auto"
         command = f"{agent} exec {options} \"{prompt}\""
+
     env = os.environ.copy()
     env.pop("GH_TOKEN", None)
     env.pop("GITHUB_TOKEN", None)
