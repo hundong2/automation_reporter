@@ -10,7 +10,7 @@ class repo_info:
     def get_repo_path(self, name) -> str:
         if name is not None:
             short_name = name.split("/")[-1]
-            tmp_path = os.path.join("./tmp", short_name)
+            tmp_path = os.path.join("/tmp", short_name)
             if os.path.exists(tmp_path):
                 print("Repo path already exists. Using existing path:", tmp_path)
             else:

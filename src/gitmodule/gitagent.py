@@ -60,7 +60,7 @@ class GitAgent:
             try:
                 repo_issues = repo.remote_repo_info.get_issues(state="open")
                 for repo_issue in repo_issues:
-                    if assignee:
+                    if assignee and repo_issue.author_association == "OWNER":
                         body = repo_issue.body or ""  # None 방지
                         if f"@{assignee}" in body:    # @ 포함 정확히 검색
                             temp_prompt = make_prompt(assignee, repo_issue.number, repo_issue.title, repo_issue.body, repo.repo_path)

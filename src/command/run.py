@@ -1,17 +1,26 @@
 import asyncio
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 async def run_agent(agent: str, prompt: str, cwd: str):
     options = "--dangerously-skip-permissions"
     command = f"{agent} -p \"{prompt}\" {options}"
     if 'codex' in agent:
         options = "--full-auto"
         command = f"{agent} exec {options} \"{prompt}\""
-    
-    
+    env = os.environ.copy()
+    env.pop("GH_TOKEN", None)
+    env.pop("GITHUB_TOKEN", None)
+
+    # gh 설정 디렉토리 명시적 상속 (HOME이 다를 경우 대비)
+    env["HOME"] = os.path.expanduser("~")
+    env["XDG_CONFIG_HOME"] = os.path.expanduser("~/.config")
     proc = await asyncio.create_subprocess_shell(command, 
                                                  stdout=asyncio.subprocess.PIPE, 
                                                  stderr=asyncio.subprocess.PIPE,
-                                                 cwd=cwd)
+                                                 cwd=cwd,
+                                                 env=env)
     stdout, stderr = await proc.communicate()
     if proc.returncode == 0:
         print(f"{agent} output: {stdout.decode()}")
