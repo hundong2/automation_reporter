@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 from github import Github
 from agent.agent import Agent, AgentList, InitializeAgentList
 from gitmodule.repo_info import repo_info, repo_info_list
+from prompt.make_prompt import make_prompt
 import os 
 
 class GitEnvironment:
@@ -52,15 +53,29 @@ class GitAgent:
             except Exception as e:
                 print(f"Error fetching issues for repo {repo.name}: {e}")
         return issues
-    def run_assignee_issue(self):
+    def make_prompt_for_issue(self, assignee: str) -> list:
+        repos = self.get_github_repos()
+        prompt = []
+        for repo in repos:
+            try:
+                repo_issues = repo.remote_repo_info.get_issues(state="open")
+                for repo_issue in repo_issues:
+                    if assignee:
+                        body = repo_issue.body or ""  # None 방지
+                        if f"@{assignee}" in body:    # @ 포함 정확히 검색
+                            temp_prompt = make_prompt(assignee, repo_issue.number, repo_issue.title, repo_issue.body, repo.repo_path)
+                            prompt.append(temp_prompt)
+            except Exception as e:
+                print(f"Error fetching issues for repo {repo.name}: {e}")
+        return prompt
+    def run_assignee_issue(self) -> list:
         agentList = InitializeAgentList()
+        promptList = []
         for agent in agentList:
-            issue_list = self.get_issue_list(agent.name)
-            if len(issue_list) > 0:
-                print(f"Found {len(issue_list)} issues for assignee @{agent.name}")
-            for issue in issue_list:
-                print(f"Issue Title: {issue.title}, Repo: {issue.repository.full_name}")
-                #run issue 
+            issue_list = self.make_prompt_for_issue(agent.name)
+            if issue_list:
+                promptList.extend(issue_list)
+        return promptList
                 
     
 class GitAgentFactory:
